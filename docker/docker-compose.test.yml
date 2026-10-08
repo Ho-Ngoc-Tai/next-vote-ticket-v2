@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  vote-ticket-support-test:
+    build:
+      context: ..
+      # context: /.. # dùng cho Windows nếu cần
+      dockerfile: ./docker/Dockerfile
+    image: vote-ticket-support-test
+    container_name: vote-ticket-support-test
+
+    # Không cần copy .env vào image, chỉ inject từ ngoài
+    environment:
+      - NODE_ENV=test
+
+    ports:
+      - "3305:3000"
+
+    restart: unless-stopped

@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+   web-vote-ticket-test:
+    image: tuanhd90/vote-ticket-support-test:latest
+    container_name: vote-ticket-test
+    restart: unless-stopped
+
+    ports:
+      - "3332:3000"
+
+    # Không copy .env vào image — chỉ load runtime
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+
+    networks:
+      - app_network
+
+    # -------- SECURITY HARDENING -------- #
+    security_opt:
+      - no-new-privileges:true # ngăn process leo quyền root
+      # - seccomp=/etc/docker/seccomp.json # profile hạn chế syscall nguy hiểm
+      # - apparmor=container-default # chặn malware truy cập kernel
+      - apparmor=unconfined
+    read_only: true # FS chỉ đọc - malware không ghi file
+
+    tmpfs:
+      - /tmp # Temp RAM, không lưu được mã độc
+
+    volumes:
+      - ./logs:/app/logs
+      - ./.next-cache:/app/.next/cache  # ← fix lỗi ENOENT
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0" # Next.js cần CPU để SSR nhiều request cùng lúc
+          memory: 2G # ngừa memory spike khi build socket + mining stats
+        reservations:
+          memory: 1G # giữ tối thiểu để tránh container bị kill lúc traffic tăng
+
+    user: "1000:1000" # không chạy root
+
+
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+networks:
+  app_network:
+    driver: bridge

@@ -1,0 +1,19 @@
+services:
+  vote-ticket-support-production:
+    build:
+      context: ..
+      # context: /.. # dùng cho Windows nếu cần
+      dockerfile: ./docker/Dockerfile
+    image: vote-ticket-support-production
+    container_name: vote-ticket-support-production
+
+    # Không cần copy .env vào image, chỉ inject từ ngoài
+    environment:
+      - NODE_ENV=production
+    # env_file:
+    #   - ../.env.test
+
+    ports:
+      - "3305:3000"
+
+    restart: unless-stopped
